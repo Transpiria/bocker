@@ -1,0 +1,25 @@
+{
+  "name": "bocker",
+  "version": "0.1.0",
+  "description": "Bocker is a simple mocker for bash.",
+  "author": "https://github.com/tasadar2",
+  "license": "Unlicense",
+  "keywords": [
+    "bash",
+    "mock"
+  ],
+  "homepage": "https://github.com/transpiria/bocker#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/transpiria/bocker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/transpiria/bocker/issues"
+  },
+  "files": [
+    "bin"
+  ],
+  "bin": {
+    "bocker": "bin/bocker"
+  }
+}

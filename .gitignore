@@ -1,0 +1,9 @@
+# VS Code
+.vscode
+ 
+# Artifacts
+bin/
+*.tgz
+
+# Node
+node_modules/
