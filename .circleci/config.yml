@@ -1,0 +1,43 @@
+version: 2.1
+
+workflow:
+    version: 2
+    workflow:
+        jobs:
+            - publish:
+                context: bocker-npm-transpiria
+                filters:
+                    branches:
+                        ignore: /.*/
+                    tags: 
+                        only: /.*/
+
+executors:
+    node:
+        docker:
+            - image: node:14
+
+jobs:
+    publish:
+        executor: node
+        steps:
+            - run:
+                name: Install dependencies
+                command: |
+                    curl -sL -o /usr/local/bin/jq https://github.com/stedolan/jq/releases/latest/download/jq-linux64
+                    chmod +x /usr/local/bin/jq
+            - run:
+                name: Set version
+                command: |
+                    jq ".version = \"<<pipeline.git.tag>>\"" package.json > package.json.temp
+                    mv package.json.temp package.json
+            - run:
+                name: Package
+                command: |
+                    mkdir -p bin
+                    cp src/bocker.sh bin/bocker
+            - run: 
+                name: Publish package
+                command: |
+                    echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
+                    npm publish
