@@ -1,6 +1,6 @@
 # Bocker
 
-[![CircleCI](https://img.shields.io/circleci/build/github/Transpiria/bocker/master)](https://app.circleci.com/pipelines/github/Transpiria/bocker)
+[![CircleCI](https://img.shields.io/circleci/build/github/Transpiria/bocker/main)](https://app.circleci.com/pipelines/github/Transpiria/bocker)
 [![NPM](https://img.shields.io/npm/v/bocker)](https://www.npmjs.com/package/bocker)
 
 Bocker is a simple mocker for bats.
