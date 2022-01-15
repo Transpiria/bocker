@@ -4,8 +4,11 @@ workflows:
     version: 2
     workflow:
         jobs:
+            - build
             - publish:
                 context: bocker-npm-transpiria
+                requires:
+                    - build
                 filters:
                     branches:
                         ignore: /.*/
@@ -17,11 +20,25 @@ executors:
         docker:
             - image: node:14
 
+commands:
+    attach-workspace:
+        steps:
+            - attach_workspace:
+                at: .
+
 jobs:
-    publish:
+    build:
         executor: node
         steps:
             - checkout
+            - persist_to_workspace:
+                root: .
+                paths: .
+
+    publish:
+        executor: node
+        steps:
+            - attach-workspace
             - run:
                 name: Install dependencies
                 command: |
