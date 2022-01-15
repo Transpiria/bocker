@@ -21,6 +21,7 @@ jobs:
     publish:
         executor: node
         steps:
+            - checkout
             - run:
                 name: Install dependencies
                 command: |
