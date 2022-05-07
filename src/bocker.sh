@@ -17,6 +17,7 @@ function write_args() {
     local file="$1"
     shift
 
+    touch "${file}"
     for arg in "$@"; do
         echo "${arg}" >> "${file}"
     done
@@ -48,6 +49,24 @@ function file_count() {
     echo "${count}"
 }
 
+function index_of() {
+    local value="$1"
+    local index="$2"
+    shift
+    shift
+    local args=("$@")
+
+    while [[ "${index}" -lt "${#args[@]}" ]] && [ "${args[${index}]}" != "${value}" ]; do
+        index=$((${index} + 1))
+    done
+
+    if [[ "${index}" -ge "${#args[@]}" ]]; then
+        echo "-1"
+    else
+        echo "${index}"
+    fi
+}
+
 function arrange_proxy() {
     local com="$1"
     shift
@@ -64,6 +83,10 @@ function arrange_proxy() {
     local exp_index
     local exp_success
     local does
+    local has_count
+    local has_exp_index
+    local has_arg_index
+    local has_end_index
     while [ "${success}" == "0" ] && [[ "${entry}" -lt "${total}" ]]; do
         exps=()
         while IFS= read -r line; do
@@ -83,12 +106,39 @@ function arrange_proxy() {
                     arg_index=$((${arg_index} + 1))
                     ;;
                 has*)
-                    #TODO: implement
-                    echo "'has*' not implemented yet"
+                    has_count="${exp#*-}"
+                    if [ "${has_count}" == "has" ]; then
+                        has_count="1"
+                    fi
+
+                    has_exp_index=$((${exp_index} + 1))
+                    has_arg_index="$(index_of "${exps[${has_exp_index}]}" ${arg_index} ${args[@]})"
+                    has_end_index=$((${has_arg_index} + ${has_count}))
+                    if [[ "${has_arg_index}" -gt "-1" ]]; then
+                        has_exp_index=$((${has_exp_index} + 1))
+                        has_arg_index=$((${has_arg_index} + 1))
+                        while [[ "${has_arg_index}" -lt "${has_end_index}" ]] && [ "${args[${has_arg_index}]}" == "${exps[${has_exp_index}]}" ]; do
+                            has_exp_index=$((${has_exp_index} + 1))
+                            has_arg_index=$((${has_arg_index} + 1))
+                        done
+                        if [ "${has_arg_index}" != "${has_end_index}" ]; then
+                            echo "DEBUG: Aurgument did not contain expected"
+                            echo "DEBUG:     expected: ${args[${has_arg_index}]}"
+                            echo "DEBUG:       actual: ${exps[${has_exp_index}]}"
+                            exp_success=0
+                        fi
+                    else
+                        echo "DEBUG: Aurgument did not contain expected"
+                        echo "DEBUG:     expected: ${exps[${exp_index}]}"
+                        exp_success=0
+                    fi
+                    exp_index=$((${exp_index} + ${has_count}))
                     ;;
                 *)
                     if [ "${args[${arg_index}]}" != "${exp}" ]; then
-                        echo "DEBUG: Aurgument did not match expected: ${args[${arg_index}]} != ${exp}"
+                        echo "DEBUG: Aurgument did not match expected"
+                        echo "DEBUG:     expected: ${exp}"
+                        echo "DEBUG:       actual: ${args[${arg_index}]}"
                         exp_success=0
                     fi
                     arg_index=$((${arg_index} + 1))
