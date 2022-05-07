@@ -4,7 +4,7 @@ function setup() {
     source my_code.sh
 }
 
-function tear_down() {
+function teardown() {
     bock_teardown
 }
 
@@ -18,5 +18,5 @@ function tear_down() {
 
     # assert
     [ "${status}" -eq 0 ]
-    verify command
+    verify docker
 }
