@@ -3,11 +3,15 @@
 function bock_setup() {
     if [ -z "${bock_run}" ]; then
         export bock_run=$(mktemp -d || mktemp -d -t tmp)
+        export bock_logs="${bock_run}/logs"
     fi
 }
 
 function bock_teardown() {
     if [ -n "${bock_run}" ] && [ -d "${bock_run}" ]; then
+        if [ -f "${bock_logs}" ]; then
+            cat "${bock_logs}" >&2
+        fi
         rm -r "${bock_run}"
     fi
     unset bock_run
@@ -67,11 +71,42 @@ function index_of() {
     fi
 }
 
+function bock_log() {
+    local level="$1"
+    local message="$2"
+
+    echo "${level}: ${message}" >> "${bock_logs}"
+}
+
+function bock_log_debug() {
+    local message="$1"
+
+    bock_log "DEBUG" "${message}"
+}
+
+function bock_log_info() {
+    local message="$1"
+
+    bock_log "INFO" "${message}"
+}
+
+function bock_log_warn() {
+    local message="$1"
+
+    bock_log "WARN" "${message}"
+}
+
+function bock_log_error() {
+    local message="$1"
+
+    bock_log "ERROR" "${message}"
+}
+
 function arrange_proxy() {
     local com="$1"
     shift
     local args=("$@")
-    echo "DEBUG: Mocked call: ${com} ${args[@]}"
+    bock_log_debug "Mocked call: ${com} ${args[@]}"
 
     local count
     local entry=0
@@ -92,7 +127,7 @@ function arrange_proxy() {
         while IFS= read -r line; do
             exps+=("${line}")
         done < "${bock_run}/${com}/${entry}/exps"
-        echo "DEBUG: Attempting to match expected: ${com} ${exps[@]}"
+        bock_log_debug "Attempting to match expected: ${com} ${exps[@]}"
         arg_index=0
         exp_index=0
         exp_success=1
@@ -122,23 +157,23 @@ function arrange_proxy() {
                             has_arg_index=$((${has_arg_index} + 1))
                         done
                         if [ "${has_arg_index}" != "${has_end_index}" ]; then
-                            echo "DEBUG: Aurgument did not contain expected"
-                            echo "DEBUG:     expected: ${args[${has_arg_index}]}"
-                            echo "DEBUG:       actual: ${exps[${has_exp_index}]}"
+                            bock_log_debug "Aurgument did not contain expected"
+                            bock_log_debug "    expected: ${exps[${has_exp_index}]}"
+                            bock_log_debug "      actual: ${args[${has_arg_index}]}"
                             exp_success=0
                         fi
                     else
-                        echo "DEBUG: Aurgument did not contain expected"
-                        echo "DEBUG:     expected: ${exps[${exp_index}]}"
+                        bock_log_debug "Aurgument did not contain expected"
+                        bock_log_debug "    expected: ${exps[${exp_index}]}"
                         exp_success=0
                     fi
                     exp_index=$((${exp_index} + ${has_count}))
                     ;;
                 *)
                     if [ "${args[${arg_index}]}" != "${exp}" ]; then
-                        echo "DEBUG: Aurgument did not match expected"
-                        echo "DEBUG:     expected: ${exp}"
-                        echo "DEBUG:       actual: ${args[${arg_index}]}"
+                        bock_log_debug "Aurgument did not match expected"
+                        bock_log_debug "    expected: ${exp}"
+                        bock_log_debug "      actual: ${args[${arg_index}]}"
                         exp_success=0
                     fi
                     arg_index=$((${arg_index} + 1))
@@ -166,7 +201,7 @@ function arrange_proxy() {
         "${does[@]}"
     else
         #TODO: passthru proxy
-        echo "WARN: Mocked call had no matching arrangement: ${com} ${args[@]}"
+        bock_log_warn "Mocked call had no matching arrangement: ${com} ${args[@]}"
     fi
 }
 
